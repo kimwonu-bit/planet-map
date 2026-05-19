@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo, useState, useCallback, useEffect, useRef, Suspense } from "react"
+import { useMemo, useState, useEffect, useRef, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { UniverseHeader } from "@/components/ui/UniverseHeader"
 import { PlanetDetailPanel } from "@/components/ui/PlanetDetailPanel"
 import { AppearancePanel } from "@/components/ui/AppearancePanel"
-import { Flame, Loader2, Info, Sparkles, GitCommit, Zap, Rocket } from "lucide-react"
+import { Flame, Loader2, Info, Sparkles, Rocket } from "lucide-react"
 import type {
   AppearanceTarget,
   PlanetAppearance,
@@ -29,175 +29,63 @@ const SolarSystem = dynamic(
   }
 )
 
-// Mock data - will be replaced with real GitHub data
-const LANGUAGE_PROGRESSION = ["javascript", "typescript", "python", "go", "rust"]
-
-const mockPlanets: PlanetData[] = [
-  {
-    id: "javascript",
-    name: "JavaScript",
-    type: "javascript",
-    level: 4,
-    brightness: 0.76,
-    position: [0, 0, 0],
-    orbitRadius: 16,
-    orbitSpeed: 0.12,
-    orbitTilt: 0.05,
-    commits: 847,
-    dailyCommits: 0,
-    satellites: [
-      { id: "react", name: "React", level: 4, color: "#61dafb", orbitRadius: 1, orbitSpeed: 0.4, size: 0.8 },
-      { id: "nextjs", name: "Next.js", level: 3, color: "#888888", orbitRadius: 1.6, orbitSpeed: 0.35, size: 0.7 },
-      { id: "vue", name: "Vue", level: 2, color: "#4fc08d", orbitRadius: 2.2, orbitSpeed: 0.3, size: 0.6 },
-      { id: "express", name: "Express", level: 2, color: "#d7d7d7", orbitRadius: 2.8, orbitSpeed: 0.25, size: 0.55 },
-    ],
-  },
-  {
-    id: "typescript",
-    name: "TypeScript",
-    type: "typescript",
-    level: 3,
-    brightness: 0.62,
-    position: [0, 0, 0],
-    orbitRadius: 21,
-    orbitSpeed: 0.08,
-    orbitTilt: -0.08,
-    commits: 523,
-    dailyCommits: 0,
-    satellites: [
-      { id: "nodejs", name: "Node.js", level: 3, color: "#339933", orbitRadius: 1, orbitSpeed: 0.4, size: 0.7 },
-      { id: "nestjs", name: "NestJS", level: 2, color: "#e0234e", orbitRadius: 1.5, orbitSpeed: 0.35, size: 0.6 },
-      { id: "prisma", name: "Prisma", level: 2, color: "#5a67d8", orbitRadius: 2, orbitSpeed: 0.3, size: 0.5 },
-      { id: "zod", name: "Zod", level: 1, color: "#3e67b1", orbitRadius: 2.5, orbitSpeed: 0.25, size: 0.4, isPlanned: true },
-    ],
-  },
-  {
-    id: "python",
-    name: "Python",
-    type: "python",
-    level: 2,
-    brightness: 0.45,
-    position: [0, 0, 0],
-    orbitRadius: 26,
-    orbitSpeed: 0.055,
-    orbitTilt: 0.12,
-    commits: 234,
-    dailyCommits: 0,
-    satellites: [
-      { id: "fastapi", name: "FastAPI", level: 2, color: "#009688", orbitRadius: 1, orbitSpeed: 0.45, size: 0.6 },
-      { id: "django", name: "Django", level: 1, color: "#44b78b", orbitRadius: 1.6, orbitSpeed: 0.35, size: 0.5 },
-      { id: "pandas", name: "Pandas", level: 1, color: "#150458", orbitRadius: 2.2, orbitSpeed: 0.3, size: 0.4, isPlanned: true },
-    ],
-  },
-  {
-    id: "go",
-    name: "Go",
-    type: "go",
-    level: 2,
-    brightness: 0.34,
-    position: [0, 0, 0],
-    orbitRadius: 31,
-    orbitSpeed: 0.035,
-    orbitTilt: -0.06,
-    commits: 178,
-    dailyCommits: 0,
-    satellites: [
-      { id: "gin", name: "Gin", level: 2, color: "#00add8", orbitRadius: 1, orbitSpeed: 0.4, size: 0.6 },
-      { id: "grpc", name: "gRPC", level: 1, color: "#4285f4", orbitRadius: 1.5, orbitSpeed: 0.35, size: 0.5 },
-      { id: "cobra", name: "Cobra", level: 1, color: "#7dd3fc", orbitRadius: 2, orbitSpeed: 0.3, size: 0.45, isPlanned: true },
-    ],
-  },
-  {
-    id: "rust",
-    name: "Rust",
-    type: "rust",
-    level: 0,
-    brightness: 0.12,
-    position: [0, 0, 0],
-    orbitRadius: 36,
-    orbitSpeed: 0.022,
-    orbitTilt: 0.15,
-    commits: 0,
-    dailyCommits: 0,
-    description: "메모리 안전성과 성능을 동시에 보장하는 시스템 프로그래밍 언어입니다. 소유권(Ownership) 모델을 통해 가비지 컬렉터 없이도 안전한 메모리 관리를 제공합니다.",
-    learningRecommendation: "공식 문서인 'The Rust Programming Language (러스트 북)'을 정독하며 소유권 개념을 확실히 잡는 것을 추천합니다. 이후 rustlings를 통해 작은 문제들을 해결하며 문법에 익숙해지세요.",
-    satellites: [
-      { id: "actix", name: "Actix", level: 0, color: "#dea584", orbitRadius: 1, orbitSpeed: 0.35, size: 0.4, isPlanned: true },
-      { id: "tauri", name: "Tauri", level: 0, color: "#ffc131", orbitRadius: 1.6, orbitSpeed: 0.3, size: 0.4, isPlanned: true },
-      { id: "wasm", name: "Wasm", level: 0, color: "#654ff0", orbitRadius: 2.2, orbitSpeed: 0.25, size: 0.35, isPlanned: true },
-    ],
-  },
-]
-
 interface UniverseViewProps {
   username: string
   avatarUrl?: string
 }
 
 export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
-  const [planets, setPlanets] = useState<PlanetData[]>(mockPlanets)
+  const [planets, setPlanets] = useState<PlanetData[]>([])
+  const [isLoadingUniverse, setIsLoadingUniverse] = useState(true)
+  const [fetchError, setFetchError] = useState<string | null>(null)
+  const [universeStats, setUniverseStats] = useState({
+    totalCommits: 0,
+    todayCommits: 0,
+    commitStreakDays: 0,
+  })
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null)
-  const [commitFlashes, setCommitFlashes] = useState<Record<string, number>>({})
-  const [commitLog, setCommitLog] = useState<Array<{ id: string; language: string; time: string }>>([])
+  const [commitFlashes] = useState<Record<string, number>>({})
   const flashTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
   const [appearanceTarget, setAppearanceTarget] = useState<AppearanceTarget | null>(null)
-  const [planetAppearances, setPlanetAppearances] = useState<Record<string, PlanetAppearance>>(
-    () => Object.fromEntries(mockPlanets.map((planet) => [planet.id, getDefaultPlanetAppearance(planet)])),
-  )
-  const [satelliteAppearances, setSatelliteAppearances] = useState<Record<string, Record<string, SatelliteAppearance>>>(
-    () =>
-      Object.fromEntries(
-        mockPlanets.map((planet) => [
-          planet.id,
+  const [planetAppearances, setPlanetAppearances] = useState<Record<string, PlanetAppearance>>({})
+  const [satelliteAppearances, setSatelliteAppearances] = useState<Record<string, Record<string, SatelliteAppearance>>>({})
+
+  const [retryCount, setRetryCount] = useState(0)
+
+  // Fetch real universe data from backend
+  useEffect(() => {
+    if (!username) return
+    setIsLoadingUniverse(true)
+    setFetchError(null)
+    fetch(`/api/users/${username}/universe`)
+      .then(async (r) => {
+        const data = await r.json()
+        if (!r.ok) throw new Error(data.error ?? `HTTP ${r.status}`)
+        return data
+      })
+      .then((data) => {
+        if (!data.planets) throw new Error("응답 데이터 형식이 올바르지 않습니다.")
+        setPlanets(data.planets)
+        setUniverseStats({
+          totalCommits: data.totalCommits ?? 0,
+          todayCommits: data.todayCommits ?? 0,
+          commitStreakDays: data.commitStreakDays ?? 0,
+        })
+        setPlanetAppearances(
+          Object.fromEntries(data.planets.map((p: PlanetData) => [p.id, getDefaultPlanetAppearance(p)]))
+        )
+        setSatelliteAppearances(
           Object.fromEntries(
-            planet.satellites.map((satellite) => [
-              satellite.id,
-              getDefaultSatelliteAppearance(satellite),
-            ]),
-          ),
-        ]),
-      ),
-  )
-
-  const handleMockCommit = useCallback((languageId: string) => {
-    setPlanets((prev) =>
-      prev.map((planet) => {
-        if (planet.id !== languageId) return planet
-        return {
-          ...planet,
-          brightness: Math.min(1, planet.brightness + 0.08),
-          commits: (planet.commits ?? 0) + 1,
-          dailyCommits: (planet.dailyCommits ?? 0) + 1,
-          isActiveToday: true,
-        }
+            data.planets.map((p: PlanetData) => [
+              p.id,
+              Object.fromEntries(p.satellites.map((s) => [s.id, getDefaultSatelliteAppearance(s)])),
+            ])
+          )
+        )
       })
-    )
-
-    setCommitFlashes((prev) => ({ ...prev, [languageId]: 1 }))
-
-    if (flashTimers.current[languageId]) {
-      clearInterval(flashTimers.current[languageId])
-    }
-
-    const interval = setInterval(() => {
-      setCommitFlashes((prev) => {
-        const current = prev[languageId] ?? 0
-        const next = current - 0.04
-        if (next <= 0) {
-          clearInterval(interval)
-          const { [languageId]: _, ...rest } = prev
-          return rest
-        }
-        return { ...prev, [languageId]: next }
-      })
-    }, 30)
-    flashTimers.current[languageId] = interval
-
-    const languageName = mockPlanets.find((p) => p.id === languageId)?.name ?? languageId
-    const now = new Date()
-    const timeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`
-    setCommitLog((prev) => [{ id: `${Date.now()}`, language: languageName, time: timeStr }, ...prev].slice(0, 8))
-  }, [])
+      .catch((err: Error) => setFetchError(err.message))
+      .finally(() => setIsLoadingUniverse(false))
+  }, [username, retryCount])
 
   useEffect(() => {
     return () => {
@@ -205,23 +93,15 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
     }
   }, [])
 
-  const planetsWithRoadmap = useMemo(() => {
-    const nextUnexplored = LANGUAGE_PROGRESSION.find(
-      (langId) => planets.find((p) => p.id === langId)?.commits === 0
-    )
-    return planets.map((p) => ({
-      ...p,
-      isRoadmap: p.id === nextUnexplored,
-    }))
-  }, [planets])
+  const planetsWithRoadmap = useMemo(() => planets, [planets])
 
   const exploredPlanets = planetsWithRoadmap.filter((planet) => !planet.isRoadmap)
-  const totalCommits = exploredPlanets.reduce((sum, p) => sum + (p.commits || 0), 0)
-  const todayCommits = exploredPlanets.reduce((sum, p) => sum + (p.dailyCommits || 0), 0)
+  const totalCommits = universeStats.totalCommits || exploredPlanets.reduce((sum, p) => sum + (p.commits || 0), 0)
+  const todayCommits = universeStats.todayCommits
   const activeLanguages = exploredPlanets.filter((planet) => planet.isActiveToday)
   const roadmapPlanet = planetsWithRoadmap.find((planet) => planet.isRoadmap)
   const starStats = useMemo(() => {
-    const commitStreakDays = 0
+    const commitStreakDays = universeStats.commitStreakDays
     const temperature = 2000 + todayCommits * 200
     const brightness = Math.min(1, 0.05 + todayCommits * 0.06)
     const daysUntilSupernova = 365 - (commitStreakDays % 365)
@@ -233,7 +113,7 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
       daysUntilSupernova,
       isSupernova: commitStreakDays > 0 && commitStreakDays % 365 === 0,
     }
-  }, [todayCommits])
+  }, [todayCommits, universeStats.commitStreakDays])
 
   const selectedPlanetAppearance =
     appearanceTarget?.kind === "planet"
@@ -281,6 +161,38 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
         [appearanceTarget.id]: appearance,
       },
     }))
+  }
+
+  if (isLoadingUniverse) {
+    return (
+      <div className="relative min-h-screen bg-background overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-[#050510]" />
+        <div className="relative flex flex-col items-center gap-3 z-10">
+          <Loader2 className="w-10 h-10 animate-spin text-primary/60" />
+          <p className="text-sm text-muted-foreground">GitHub 우주를 생성하는 중...</p>
+          <p className="text-xs text-muted-foreground/50">첫 방문 시 최대 30초 소요될 수 있습니다</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (fetchError) {
+    return (
+      <div className="relative min-h-screen bg-background overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-[#050510]" />
+        <div className="relative flex flex-col items-center gap-4 z-10 max-w-md text-center px-6">
+          <p className="text-4xl">🌑</p>
+          <p className="text-base font-medium text-foreground">우주를 불러오지 못했습니다</p>
+          <p className="text-sm text-muted-foreground break-all">{fetchError}</p>
+          <button
+            onClick={() => { setFetchError(null); setRetryCount((c) => c + 1) }}
+            className="mt-2 px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -393,44 +305,6 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
           <span className="text-xs text-muted-foreground">
             활성 언어 {activeLanguages.length}개
           </span>
-        </div>
-      </div>
-
-      {/* Mock Commit Panel */}
-      <div className="absolute left-4 top-36 z-10 w-56">
-        <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30 space-y-2">
-          <div className="flex items-center gap-2 mb-2">
-            <GitCommit className="w-3.5 h-3.5 text-primary" />
-            <span className="text-xs font-medium text-foreground/80">커밋 시뮬레이션</span>
-          </div>
-          <div className="flex flex-col gap-1.5">
-            {planets.filter((p) => !p.isRoadmap).map((planet) => (
-              <button
-                key={planet.id}
-                onClick={() => handleMockCommit(planet.id)}
-                className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-all hover:bg-primary/10 active:scale-[0.97] border border-transparent hover:border-border/40"
-              >
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: getPlanetColor(planet.type) }}
-                />
-                <span className="text-muted-foreground flex-1">{planet.name}</span>
-                <Zap className="w-3 h-3 text-muted-foreground/50" />
-              </button>
-            ))}
-          </div>
-          {commitLog.length > 0 && (
-            <div className="pt-2 border-t border-border/30 space-y-1">
-              <p className="text-[10px] text-muted-foreground/60 mb-1">최근 커밋</p>
-              {commitLog.map((log) => (
-                <div key={log.id} className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
-                  <GitCommit className="w-2.5 h-2.5 flex-shrink-0" />
-                  <span className="flex-1 truncate">{log.language}</span>
-                  <span className="text-muted-foreground/40">{log.time}</span>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
