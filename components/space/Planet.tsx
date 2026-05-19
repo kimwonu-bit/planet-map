@@ -28,10 +28,15 @@ export interface PlanetData {
   brightness: number
   satellites: SatelliteData[]
   position: [number, number, number]
+  orbitRadius?: number
+  orbitSpeed?: number
+  orbitTilt?: number
   commits?: number
   dailyCommits?: number
   isActiveToday?: boolean
   isRoadmap?: boolean
+  description?: string
+  learningRecommendation?: string
 }
 
 const planetColors: Record<string, { base: string; glow: string; surface: string }> = {
@@ -51,6 +56,7 @@ interface PlanetProps {
   isSelected?: boolean
   appearance?: PlanetAppearance
   satelliteAppearances?: Record<string, SatelliteAppearance>
+  commitFlash?: number
 }
 
 export function Planet({
@@ -60,6 +66,7 @@ export function Planet({
   isSelected,
   appearance,
   satelliteAppearances,
+  commitFlash = 0,
 }: PlanetProps) {
   const groupRef = useRef<Group>(null)
   const planetRef = useRef<Mesh>(null)
@@ -71,9 +78,9 @@ export function Planet({
     glow: appearance?.glowColor ?? defaultColors.glow,
     surface: appearance?.surfaceColor ?? defaultColors.surface,
   }
-  const baseSize = (1.2 + data.level * 0.15) * (appearance?.scale ?? 1)
+  const baseSize = (1.2 + data.level * 0.15) * (appearance?.scale ?? 1) * 0.8
   const activityBoost = data.isActiveToday ? 0.2 : 0
-  const roadmapDim = data.isRoadmap ? 0.45 : 1
+  const roadmapDim = data.isRoadmap ? 0.3 : 1
 
   // Create procedural planet texture
   const planetTexture = useMemo(() => {
@@ -196,7 +203,7 @@ export function Planet({
         <meshBasicMaterial
           color={colors.glow}
           transparent
-          opacity={(0.03 + activityBoost + (isSelected ? 0.05 : 0)) * roadmapDim}
+          opacity={(0.03 + activityBoost + (isSelected ? 0.05 : 0) + commitFlash * 0.15) * roadmapDim}
           side={THREE.BackSide}
         />
       </Sphere>
@@ -206,7 +213,7 @@ export function Planet({
         <meshBasicMaterial
           color={colors.glow}
           transparent
-          opacity={(0.05 + activityBoost * 0.5) * roadmapDim}
+          opacity={(0.05 + activityBoost * 0.5 + commitFlash * 0.12) * roadmapDim}
           side={THREE.BackSide}
         />
       </Sphere>
@@ -217,7 +224,7 @@ export function Planet({
           <meshStandardMaterial
             map={planetTexture}
             emissive={colors.glow}
-            emissiveIntensity={(0.1 + data.brightness * 0.18 + activityBoost) * roadmapDim}
+            emissiveIntensity={(0.1 + data.brightness * 0.18 + activityBoost + commitFlash * 0.5) * roadmapDim}
             transparent={data.isRoadmap}
             opacity={data.isRoadmap ? 0.58 : 1}
             roughness={0.9}
@@ -227,7 +234,7 @@ export function Planet({
           <meshStandardMaterial
             color={colors.base}
             emissive={colors.glow}
-            emissiveIntensity={(0.1 + activityBoost) * roadmapDim}
+            emissiveIntensity={(0.1 + activityBoost + commitFlash * 0.5) * roadmapDim}
             transparent={data.isRoadmap}
             opacity={data.isRoadmap ? 0.58 : 1}
             roughness={0.9}
@@ -245,10 +252,16 @@ export function Planet({
       )}
 
       {data.isRoadmap && (
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <ringGeometry args={[baseSize * 1.72, baseSize * 1.76, 64]} />
-          <meshBasicMaterial color={colors.glow} transparent opacity={0.22} side={THREE.DoubleSide} />
-        </mesh>
+        <>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[baseSize * 1.72, baseSize * 1.78, 6]} />
+            <meshBasicMaterial color={colors.glow} transparent opacity={0.18} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <ringGeometry args={[baseSize * 1.88, baseSize * 1.92, 6]} />
+            <meshBasicMaterial color={colors.glow} transparent opacity={0.1} side={THREE.DoubleSide} />
+          </mesh>
+        </>
       )}
 
       {appearance?.hasRings && (
@@ -266,11 +279,17 @@ export function Planet({
         style={{ pointerEvents: "none", userSelect: "none" }}
       >
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-xs font-medium text-foreground/80 bg-background/60 px-2 py-0.5 rounded backdrop-blur-sm whitespace-nowrap">
+          <span className={`text-xs font-medium px-2 py-0.5 rounded backdrop-blur-sm whitespace-nowrap ${
+            data.isRoadmap
+              ? "text-foreground/40 bg-background/30 border border-dashed border-foreground/15"
+              : "text-foreground/80 bg-background/60"
+          }`}>
             {data.name}
           </span>
-          <span className="text-[10px] text-muted-foreground/60">
-            {data.isRoadmap ? "미개척지" : `Lv.${data.level}`}
+          <span className={`text-[10px] ${
+            data.isRoadmap ? "text-muted-foreground/40" : "text-muted-foreground/60"
+          }`}>
+            {data.isRoadmap ? "🔭 미개척지" : `Lv.${data.level}`}
           </span>
         </div>
       </Html>

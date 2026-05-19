@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo, useState, Suspense } from "react"
+import { useMemo, useState, useCallback, useEffect, useRef, Suspense } from "react"
 import dynamic from "next/dynamic"
 import { UniverseHeader } from "@/components/ui/UniverseHeader"
 import { PlanetDetailPanel } from "@/components/ui/PlanetDetailPanel"
 import { AppearancePanel } from "@/components/ui/AppearancePanel"
-import { Flame, Loader2, Info, Sparkles } from "lucide-react"
+import { Flame, Loader2, Info, Sparkles, GitCommit, Zap, Rocket } from "lucide-react"
 import type {
   AppearanceTarget,
   PlanetAppearance,
@@ -30,6 +30,8 @@ const SolarSystem = dynamic(
 )
 
 // Mock data - will be replaced with real GitHub data
+const LANGUAGE_PROGRESSION = ["javascript", "typescript", "python", "go", "rust"]
+
 const mockPlanets: PlanetData[] = [
   {
     id: "javascript",
@@ -37,10 +39,12 @@ const mockPlanets: PlanetData[] = [
     type: "javascript",
     level: 4,
     brightness: 0.76,
-    position: [7.4, 0.5, 4.2],
+    position: [0, 0, 0],
+    orbitRadius: 16,
+    orbitSpeed: 0.12,
+    orbitTilt: 0.05,
     commits: 847,
-    dailyCommits: 4,
-    isActiveToday: true,
+    dailyCommits: 0,
     satellites: [
       { id: "react", name: "React", level: 4, color: "#61dafb", orbitRadius: 1, orbitSpeed: 0.4, size: 0.8 },
       { id: "nextjs", name: "Next.js", level: 3, color: "#888888", orbitRadius: 1.6, orbitSpeed: 0.35, size: 0.7 },
@@ -54,10 +58,12 @@ const mockPlanets: PlanetData[] = [
     type: "typescript",
     level: 3,
     brightness: 0.62,
-    position: [-6.8, 1.3, -4.4],
+    position: [0, 0, 0],
+    orbitRadius: 21,
+    orbitSpeed: 0.08,
+    orbitTilt: -0.08,
     commits: 523,
-    dailyCommits: 2,
-    isActiveToday: true,
+    dailyCommits: 0,
     satellites: [
       { id: "nodejs", name: "Node.js", level: 3, color: "#339933", orbitRadius: 1, orbitSpeed: 0.4, size: 0.7 },
       { id: "nestjs", name: "NestJS", level: 2, color: "#e0234e", orbitRadius: 1.5, orbitSpeed: 0.35, size: 0.6 },
@@ -71,7 +77,10 @@ const mockPlanets: PlanetData[] = [
     type: "python",
     level: 2,
     brightness: 0.45,
-    position: [4.4, -1.6, -7.4],
+    position: [0, 0, 0],
+    orbitRadius: 26,
+    orbitSpeed: 0.055,
+    orbitTilt: 0.12,
     commits: 234,
     dailyCommits: 0,
     satellites: [
@@ -86,10 +95,12 @@ const mockPlanets: PlanetData[] = [
     type: "go",
     level: 2,
     brightness: 0.34,
-    position: [-5, -0.8, 6.6],
+    position: [0, 0, 0],
+    orbitRadius: 31,
+    orbitSpeed: 0.035,
+    orbitTilt: -0.06,
     commits: 178,
-    dailyCommits: 1,
-    isActiveToday: true,
+    dailyCommits: 0,
     satellites: [
       { id: "gin", name: "Gin", level: 2, color: "#00add8", orbitRadius: 1, orbitSpeed: 0.4, size: 0.6 },
       { id: "grpc", name: "gRPC", level: 1, color: "#4285f4", orbitRadius: 1.5, orbitSpeed: 0.35, size: 0.5 },
@@ -102,10 +113,14 @@ const mockPlanets: PlanetData[] = [
     type: "rust",
     level: 0,
     brightness: 0.12,
-    position: [0, 2.1, -10.2],
+    position: [0, 0, 0],
+    orbitRadius: 36,
+    orbitSpeed: 0.022,
+    orbitTilt: 0.15,
     commits: 0,
     dailyCommits: 0,
-    isRoadmap: true,
+    description: "메모리 안전성과 성능을 동시에 보장하는 시스템 프로그래밍 언어입니다. 소유권(Ownership) 모델을 통해 가비지 컬렉터 없이도 안전한 메모리 관리를 제공합니다.",
+    learningRecommendation: "공식 문서인 'The Rust Programming Language (러스트 북)'을 정독하며 소유권 개념을 확실히 잡는 것을 추천합니다. 이후 rustlings를 통해 작은 문제들을 해결하며 문법에 익숙해지세요.",
     satellites: [
       { id: "actix", name: "Actix", level: 0, color: "#dea584", orbitRadius: 1, orbitSpeed: 0.35, size: 0.4, isPlanned: true },
       { id: "tauri", name: "Tauri", level: 0, color: "#ffc131", orbitRadius: 1.6, orbitSpeed: 0.3, size: 0.4, isPlanned: true },
@@ -120,7 +135,11 @@ interface UniverseViewProps {
 }
 
 export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
+  const [planets, setPlanets] = useState<PlanetData[]>(mockPlanets)
   const [selectedPlanet, setSelectedPlanet] = useState<PlanetData | null>(null)
+  const [commitFlashes, setCommitFlashes] = useState<Record<string, number>>({})
+  const [commitLog, setCommitLog] = useState<Array<{ id: string; language: string; time: string }>>([])
+  const flashTimers = useRef<Record<string, ReturnType<typeof setInterval>>>({})
   const [appearanceTarget, setAppearanceTarget] = useState<AppearanceTarget | null>(null)
   const [planetAppearances, setPlanetAppearances] = useState<Record<string, PlanetAppearance>>(
     () => Object.fromEntries(mockPlanets.map((planet) => [planet.id, getDefaultPlanetAppearance(planet)])),
@@ -140,15 +159,71 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
       ),
   )
 
-  const exploredPlanets = mockPlanets.filter((planet) => !planet.isRoadmap)
+  const handleMockCommit = useCallback((languageId: string) => {
+    setPlanets((prev) =>
+      prev.map((planet) => {
+        if (planet.id !== languageId) return planet
+        return {
+          ...planet,
+          brightness: Math.min(1, planet.brightness + 0.08),
+          commits: (planet.commits ?? 0) + 1,
+          dailyCommits: (planet.dailyCommits ?? 0) + 1,
+          isActiveToday: true,
+        }
+      })
+    )
+
+    setCommitFlashes((prev) => ({ ...prev, [languageId]: 1 }))
+
+    if (flashTimers.current[languageId]) {
+      clearInterval(flashTimers.current[languageId])
+    }
+
+    const interval = setInterval(() => {
+      setCommitFlashes((prev) => {
+        const current = prev[languageId] ?? 0
+        const next = current - 0.04
+        if (next <= 0) {
+          clearInterval(interval)
+          const { [languageId]: _, ...rest } = prev
+          return rest
+        }
+        return { ...prev, [languageId]: next }
+      })
+    }, 30)
+    flashTimers.current[languageId] = interval
+
+    const languageName = mockPlanets.find((p) => p.id === languageId)?.name ?? languageId
+    const now = new Date()
+    const timeStr = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}:${now.getSeconds().toString().padStart(2, "0")}`
+    setCommitLog((prev) => [{ id: `${Date.now()}`, language: languageName, time: timeStr }, ...prev].slice(0, 8))
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      Object.values(flashTimers.current).forEach(clearInterval)
+    }
+  }, [])
+
+  const planetsWithRoadmap = useMemo(() => {
+    const nextUnexplored = LANGUAGE_PROGRESSION.find(
+      (langId) => planets.find((p) => p.id === langId)?.commits === 0
+    )
+    return planets.map((p) => ({
+      ...p,
+      isRoadmap: p.id === nextUnexplored,
+    }))
+  }, [planets])
+
+  const exploredPlanets = planetsWithRoadmap.filter((planet) => !planet.isRoadmap)
   const totalCommits = exploredPlanets.reduce((sum, p) => sum + (p.commits || 0), 0)
   const todayCommits = exploredPlanets.reduce((sum, p) => sum + (p.dailyCommits || 0), 0)
   const activeLanguages = exploredPlanets.filter((planet) => planet.isActiveToday)
-  const roadmapPlanet = mockPlanets.find((planet) => planet.isRoadmap)
+  const roadmapPlanet = planetsWithRoadmap.find((planet) => planet.isRoadmap)
   const starStats = useMemo(() => {
-    const commitStreakDays = 42
-    const temperature = 3200 + todayCommits * 160 + commitStreakDays * 6
-    const brightness = Math.min(1, 0.22 + todayCommits * 0.08 + commitStreakDays / 500)
+    const commitStreakDays = 0
+    const temperature = 2000 + todayCommits * 200
+    const brightness = Math.min(1, 0.05 + todayCommits * 0.06)
     const daysUntilSupernova = 365 - (commitStreakDays % 365)
 
     return {
@@ -225,7 +300,7 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
       <div className="absolute inset-0 pt-14">
         <Suspense fallback={null}>
           <SolarSystem
-            planets={mockPlanets}
+            planets={planetsWithRoadmap}
             onPlanetSelect={handlePlanetSelect}
             onSatelliteSelect={handleSatelliteSelect}
             selectedPlanetId={selectedPlanet?.id}
@@ -235,6 +310,7 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
             isSupernova={starStats.isSupernova}
             planetAppearances={planetAppearances}
             satelliteAppearances={satelliteAppearances}
+            commitFlashes={commitFlashes}
           />
         </Suspense>
       </div>
@@ -254,7 +330,7 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
         <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30 space-y-2">
           <p className="text-xs font-medium text-foreground/80 mb-2">언어</p>
           <div className="flex flex-col gap-1.5">
-            {mockPlanets.map((planet) => (
+            {planetsWithRoadmap.map((planet) => (
               <LegendItem
                 key={planet.id}
                 color={getPlanetColor(planet.type)}
@@ -288,11 +364,20 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
             <span>{starStats.commitStreakDays}일 연속</span>
           </div>
           {roadmapPlanet && (
-            <div className="flex items-center gap-2 pt-2 border-t border-border/30">
-              <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-              <span className="text-xs text-muted-foreground">
-                다음 미개척지: {roadmapPlanet.name}
-              </span>
+            <div className="flex flex-col gap-2 pt-2 border-t border-border/30">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  다음 미개척지: {roadmapPlanet.name}
+                </span>
+              </div>
+              <button
+                onClick={() => handlePlanetSelect(roadmapPlanet)}
+                className="flex items-center justify-center gap-1.5 w-full py-1.5 mt-1 text-xs font-medium text-primary-foreground bg-primary/80 hover:bg-primary rounded-md transition-colors"
+              >
+                <Rocket className="w-3.5 h-3.5" />
+                미개척지로 이동
+              </button>
             </div>
           )}
           <p className="text-[11px] text-muted-foreground">
@@ -308,6 +393,44 @@ export function UniverseView({ username, avatarUrl }: UniverseViewProps) {
           <span className="text-xs text-muted-foreground">
             활성 언어 {activeLanguages.length}개
           </span>
+        </div>
+      </div>
+
+      {/* Mock Commit Panel */}
+      <div className="absolute left-4 top-36 z-10 w-56">
+        <div className="p-3 bg-card/60 backdrop-blur-sm rounded-lg border border-border/30 space-y-2">
+          <div className="flex items-center gap-2 mb-2">
+            <GitCommit className="w-3.5 h-3.5 text-primary" />
+            <span className="text-xs font-medium text-foreground/80">커밋 시뮬레이션</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {planets.filter((p) => !p.isRoadmap).map((planet) => (
+              <button
+                key={planet.id}
+                onClick={() => handleMockCommit(planet.id)}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs text-left transition-all hover:bg-primary/10 active:scale-[0.97] border border-transparent hover:border-border/40"
+              >
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: getPlanetColor(planet.type) }}
+                />
+                <span className="text-muted-foreground flex-1">{planet.name}</span>
+                <Zap className="w-3 h-3 text-muted-foreground/50" />
+              </button>
+            ))}
+          </div>
+          {commitLog.length > 0 && (
+            <div className="pt-2 border-t border-border/30 space-y-1">
+              <p className="text-[10px] text-muted-foreground/60 mb-1">최근 커밋</p>
+              {commitLog.map((log) => (
+                <div key={log.id} className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70">
+                  <GitCommit className="w-2.5 h-2.5 flex-shrink-0" />
+                  <span className="flex-1 truncate">{log.language}</span>
+                  <span className="text-muted-foreground/40">{log.time}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

@@ -139,13 +139,38 @@ export function PlanetDetailPanel({ planet, onClose }: PlanetDetailPanelProps) {
 
             {/* Read-only notice */}
             <div className="p-3 bg-muted/30 rounded-lg flex items-start gap-2">
-              <Eye className="w-3.5 h-3.5 text-muted-foreground mt-0.5" />
-              <p className="text-xs text-muted-foreground">
+              <Eye className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 {planet.isRoadmap
                   ? "로드맵은 다음 행성입니다. 아직 커밋이 없어 어둡게 표시되는 미개척지입니다."
                   : "커밋에 사용된 언어 행성은 밝아지고, 오늘 커밋한 언어는 활성 상태로 표시됩니다."}
               </p>
             </div>
+
+            {/* Language Description & Learning Recommendation */}
+            {(planet.description || planet.learningRecommendation) && (
+              <div className="space-y-3 pt-3 border-t border-border/50">
+                {planet.description && (
+                  <div>
+                    <h3 className="text-[11px] font-medium text-foreground mb-1">언어 설명</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {planet.description}
+                    </p>
+                  </div>
+                )}
+                {planet.learningRecommendation && (
+                  <div>
+                    <h3 className="text-[11px] font-medium text-foreground mb-1 flex items-center gap-1.5">
+                      <Rocket className="w-3 h-3 text-primary" />
+                      학습 방법 추천
+                    </h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      {planet.learningRecommendation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
