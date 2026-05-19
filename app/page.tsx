@@ -24,7 +24,7 @@ export default async function HomePage() {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Telescope className="w-4 h-4 text-primary" />
             </div>
-            <span className="font-semibold text-foreground">DevUniverse</span>
+            <span className="font-semibold text-foreground">Planet Map</span>
           </div>
           <Button asChild variant="ghost" size="sm">
             <Link href="/auth/login">
@@ -76,7 +76,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="border-t border-border/50 py-6 px-4">
         <div className="container mx-auto text-center text-xs text-muted-foreground">
-          DevUniverse - 개발자 성장 시각화 플랫폼
+          Planet Map - 개발자 성장 시각화 플랫폼
         </div>
       </footer>
     </div>

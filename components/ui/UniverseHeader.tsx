@@ -44,7 +44,7 @@ export function UniverseHeader({ username, avatarUrl, totalCommits, totalPlanets
             <Telescope className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h1 className="font-semibold text-sm text-foreground">DevUniverse</h1>
+            <h1 className="font-semibold text-sm text-foreground">Planet Map</h1>
           </div>
         </div>
 

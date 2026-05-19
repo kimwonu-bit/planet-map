@@ -55,7 +55,7 @@ export default function LoginPage() {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center mb-4">
               <Telescope className="w-8 h-8 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground">DevUniverse</h1>
+            <h1 className="text-2xl font-semibold text-foreground">Planet Map</h1>
             <p className="text-sm text-muted-foreground mt-1">개발자 성장 시각화 플랫폼</p>
           </div>
 

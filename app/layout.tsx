@@ -7,7 +7,7 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'DevUniverse - 개발자 성장 우주',
+  title: 'Planet Map - 개발자 성장 우주',
   description: 'GitHub 기반 개발자 성장 시각화 플랫폼. 당신의 코드를 우주로 만들어보세요.',
   generator: 'v0.app',
   icons: {
