@@ -64,6 +64,34 @@ CREATE POLICY "Users can update own activity"
 -- Allow service_role (server-side) to bypass RLS
 -- (Supabase service_role key bypasses RLS by default — no additional policy needed.)
 
+-- ── AI 개인화 로드맵 캐시 ──────────────────────────────────────
+-- 스택 핑거프린트 기반 캐시 — TTL 없이 스택 변경 시에만 무효화
+-- Gemini 호출을 최소화하는 핵심 테이블
+CREATE TABLE IF NOT EXISTS user_roadmaps (
+  id                UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  github_username   TEXT        NOT NULL UNIQUE,
+  data              JSONB       NOT NULL,   -- CachedRoadmap JSON
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_roadmaps_username
+  ON user_roadmaps (github_username);
+
+ALTER TABLE user_roadmaps ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can read own roadmap"
+  ON user_roadmaps FOR SELECT
+  USING (github_username = (auth.jwt() ->> 'user_name'));
+
+CREATE POLICY "Users can upsert own roadmap"
+  ON user_roadmaps FOR INSERT
+  WITH CHECK (github_username = (auth.jwt() ->> 'user_name'));
+
+CREATE POLICY "Users can update own roadmap"
+  ON user_roadmaps FOR UPDATE
+  USING (github_username = (auth.jwt() ->> 'user_name'));
+
 -- ── Stale cache cleanup (optional cron) ───────────────────────
 -- Run via pg_cron or Supabase edge function to purge old entries.
 -- Example: DELETE FROM universe_cache WHERE synced_at < NOW() - INTERVAL '24 hours';

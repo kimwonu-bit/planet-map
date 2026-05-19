@@ -111,6 +111,16 @@ export function AppearancePanel({
             onChange={(scale) => onUpdatePlanet({ ...planetAppearance, scale })}
           />
 
+          <RangeField
+            label="밝기"
+            value={planetAppearance.brightness}
+            min={0}
+            max={2}
+            step={0.05}
+            onChange={(brightness) => onUpdatePlanet({ ...planetAppearance, brightness })}
+            displayFormat={(v) => `${Math.round(v * 100)}%`}
+          />
+
           <label className="flex items-center justify-between rounded-lg bg-muted/30 px-3 py-2">
             <span className="text-xs text-foreground">고리 표시</span>
             <input
@@ -199,6 +209,7 @@ function RangeField({
   max,
   step,
   onChange,
+  displayFormat,
 }: {
   label: string
   value: number
@@ -206,12 +217,15 @@ function RangeField({
   max: number
   step: number
   onChange: (value: number) => void
+  displayFormat?: (value: number) => string
 }) {
   return (
     <label className="space-y-2 block">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{label}</span>
-        <span className="text-[11px] text-muted-foreground">{value.toFixed(2)}x</span>
+        <span className="text-[11px] text-muted-foreground">
+          {displayFormat ? displayFormat(value) : `${value.toFixed(2)}x`}
+        </span>
       </div>
       <input
         type="range"

@@ -81,6 +81,7 @@ export function Planet({
   const baseSize = (1.2 + data.level * 0.15) * (appearance?.scale ?? 1) * 0.8
   const activityBoost = data.isActiveToday ? 0.2 : 0
   const roadmapDim = data.isRoadmap ? 0.3 : 1
+  const brightnessMultiplier = appearance?.brightness ?? 1
 
   // Create procedural planet texture
   const planetTexture = useMemo(() => {
@@ -203,7 +204,7 @@ export function Planet({
         <meshBasicMaterial
           color={colors.glow}
           transparent
-          opacity={(0.03 + activityBoost + (isSelected ? 0.05 : 0) + commitFlash * 0.15) * roadmapDim}
+          opacity={(0.03 + activityBoost + (isSelected ? 0.05 : 0) + commitFlash * 0.15) * roadmapDim * brightnessMultiplier}
           side={THREE.BackSide}
         />
       </Sphere>
@@ -213,7 +214,7 @@ export function Planet({
         <meshBasicMaterial
           color={colors.glow}
           transparent
-          opacity={(0.05 + activityBoost * 0.5 + commitFlash * 0.12) * roadmapDim}
+          opacity={(0.05 + activityBoost * 0.5 + commitFlash * 0.12) * roadmapDim * brightnessMultiplier}
           side={THREE.BackSide}
         />
       </Sphere>
@@ -224,7 +225,7 @@ export function Planet({
           <meshStandardMaterial
             map={planetTexture}
             emissive={colors.glow}
-            emissiveIntensity={(0.1 + data.brightness * 0.18 + activityBoost + commitFlash * 0.5) * roadmapDim}
+            emissiveIntensity={(0.1 + data.brightness * 0.18 + activityBoost + commitFlash * 0.5) * roadmapDim * brightnessMultiplier}
             transparent={data.isRoadmap}
             opacity={data.isRoadmap ? 0.58 : 1}
             roughness={0.9}
@@ -234,7 +235,7 @@ export function Planet({
           <meshStandardMaterial
             color={colors.base}
             emissive={colors.glow}
-            emissiveIntensity={(0.1 + activityBoost + commitFlash * 0.5) * roadmapDim}
+            emissiveIntensity={(0.1 + activityBoost + commitFlash * 0.5) * roadmapDim * brightnessMultiplier}
             transparent={data.isRoadmap}
             opacity={data.isRoadmap ? 0.58 : 1}
             roughness={0.9}

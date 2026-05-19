@@ -369,6 +369,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "rocky",
       hasRings: false,
       scale: 1,
+      brightness: 1,
     },
     typescript: {
       baseColor: "#102d4f",
@@ -377,6 +378,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "ocean",
       hasRings: true,
       scale: 1,
+      brightness: 1,
     },
     python: {
       baseColor: "#1c3554",
@@ -385,6 +387,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "gas",
       hasRings: false,
       scale: 1,
+      brightness: 1,
     },
     java: {
       baseColor: "#4a1f16",
@@ -393,6 +396,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "lava",
       hasRings: false,
       scale: 1,
+      brightness: 1,
     },
     go: {
       baseColor: "#123b45",
@@ -401,6 +405,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "ice",
       hasRings: false,
       scale: 1,
+      brightness: 1,
     },
     rust: {
       baseColor: "#2f241f",
@@ -409,6 +414,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "rocky",
       hasRings: true,
       scale: 1,
+      brightness: 1,
     },
     other: {
       baseColor: "#2d2a4a",
@@ -417,6 +423,7 @@ function getDefaultPlanetAppearance(planet: PlanetData): PlanetAppearance {
       surfaceStyle: "gas",
       hasRings: false,
       scale: 1,
+      brightness: 1,
     },
   }
 
